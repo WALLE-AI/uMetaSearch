@@ -143,16 +143,9 @@ In addition, you will need to set the following secrets:
 2. Support third-party LLM's API, such as qwen, baichuan, etc.
 3. Mini program support, currently only supports web end.
 
-## Contact
-
-- Issue(suggestion): [![GitHub issues](https://img.shields.io/github/issues/shibing624/SmartSearch.svg)](https://github.com/shibing624/SmartSearch/issues)
-- Email: xuming: xuming624@qq.com
-- Wechat: Add my *Wechat ID: xuming624, note: name-company-NLP* to join the NLP discussion group.
-
 ## License
 
-The license agreement is [The Apache License 2.0](LICENSE), which can be used for commercial purposes for free. Please include SmartSearch's link and license agreement in the product description.
-
+The license agreement is [The Apache License 2.0](LICENSE), which can be used for commercial purposes for free. 
 ## Contribute
 
 The project code is still rough, if everyone has improvements to the code, welcome to submit back to this project.

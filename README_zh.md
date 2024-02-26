@@ -145,14 +145,9 @@ BACKEND=SERPER LLM_TYPE=OPENAI LLM_MODEL=gpt-4 python search.py
 - 小程序端支持，目前只支持web端
 - 使用Agent判定是否需要改写query，以及主动反问用户补充问题，提升搜索准确率
 
-## Contact
-- Issue(建议)：[![GitHub issues](https://img.shields.io/github/issues/shibing624/SmartSearch.svg)](https://github.com/shibing624/SmartSearch/issues)
-- 邮件我：xuming: xuming624@qq.com
-- 微信我：加我*微信号：xuming624, 备注：姓名-公司-NLP* 进NLP交流群。
-
 
 ## License
-授权协议为 [The Apache License 2.0](LICENSE)，可免费用做商业用途。请在产品说明中附加SmartSearch的链接和授权协议。
+授权协议为 [The Apache License 2.0](LICENSE)，可免费用做商业用途。
 
 
 ## Contribute
