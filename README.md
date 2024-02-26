@@ -12,7 +12,7 @@
 
 -----------------
 
-# SmartSearch: Build your own conversational search engine with LLMs
+# uMetaSearch: Build your own conversational search engine with LLMs
 [![HF Models](https://img.shields.io/badge/Hugging%20Face-shibing624-green)](https://huggingface.co/shibing624)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
