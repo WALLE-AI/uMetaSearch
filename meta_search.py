@@ -25,6 +25,9 @@ from leptonai.photon.types import to_bool
 from leptonai.util import tool
 from loguru import logger
 
+from langfuse.decorators import observe
+from langfuse.openai import openai
+
 
 import urllib3
 from duckduckgo_search import DDGS
@@ -158,7 +161,7 @@ MODEL_TOKEN_LIMIT = {
 MODEL_NAME_LIST = {
     "openai":{
     "gpt-3.5-turbo":"gpt-3.5-turbo",
-    "gpt-3.5-turbo-16k": "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-16k":"gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-1106": "gpt-3.5-turbo-1106",
     "gpt-4": "gpt-4",
     "gpt-4-32k":"gpt-4-32k",
@@ -556,10 +559,10 @@ class RAG(Photon):
             raise RuntimeError("Backend must be LEPTON, BING, GOOGLE, SERPER or SEARCHAPI.")
         logger.info(f"Using Search API backend: {self.backend}")
         # self.llm_type = os.environ["LLM_TYPE"].upper()
-        self.llm_type = "openrouter"
+        self.llm_type = "openai"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-70b-instruct"]
-        self.model = "meta-llama/llama-3-8b-instruct:free"
+        self.model = MODEL_NAME_LIST[self.llm_type]["gpt-3.5-turbo-16k"]
+        # self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
         self.executor = concurrent.futures.ThreadPoolExecutor(
@@ -741,6 +744,7 @@ class RAG(Photon):
         _ = self.executor.submit(self.kv.put, search_uuid, "".join(all_yielded_results))
 
     @Photon.handler(method="POST", path="/query")
+    @observe()
     def query_function(
             self,
             query: str,
