@@ -10,6 +10,8 @@ import traceback
 from typing import List, Generator, Optional
 from itertools import islice
 
+
+
 import httpx
 import leptonai
 import requests
@@ -22,6 +24,7 @@ from leptonai.photon import Photon, StaticFiles
 from leptonai.photon.types import to_bool
 from leptonai.util import tool
 from loguru import logger
+
 
 import urllib3
 from duckduckgo_search import DDGS
@@ -150,6 +153,24 @@ MODEL_TOKEN_LIMIT = {
     "gpt-4-32k": 32768,
     "gpt-4-1106-preview": 128000,
     "gpt-4-vision-preview": 128000,
+}
+
+MODEL_NAME_LIST = {
+    "openai":{
+    "gpt-3.5-turbo":"gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k": "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-1106": "gpt-3.5-turbo-1106",
+    "gpt-4": "gpt-4",
+    "gpt-4-32k":"gpt-4-32k",
+    "gpt-4-1106-preview": "gpt-4-1106-preview",
+    "gpt-4-vision-preview": "gpt-4-vision-preview",
+    },
+    "openrouter":{
+        "meta-llama/llama-3-8b-instruct:free":"meta-llama/llama-3-8b-instruct:free",
+        "microsoft/phi-3-medium-128k-instruct:free":"microsoft/phi-3-medium-128k-instruct:free",
+        "meta-llama/llama-3-70b-instruct":"meta-llama/llama-3-70b-instruct"
+    }
+    
 }
 
 
@@ -461,7 +482,6 @@ class RAG(Photon):
         each thread will have its own client.
         """
         import openai
-
         thread_local = threading.local()
         try:
             return thread_local.client
@@ -470,9 +490,12 @@ class RAG(Photon):
                 base_url = f"https://{self.model}.lepton.run/api/v1/"
                 api_key = os.environ.get(
                     "LEPTON_WORKSPACE_TOKEN") or WorkspaceInfoLocalRecord.get_current_workspace_token()
+            elif self.llm_type == "openrouter":
+                base_url = "https://openrouter.ai/api/v1"
+                api_key  = os.environ.get("OPENROUTER_API_KEY")
             else:
                 base_url = "https://api.openai.com/v1"
-                api_key = "xxxx"
+                api_key  = os.environ.get("OPENAI_API_KEY")
             thread_local.client = openai.OpenAI(
                 base_url=base_url,
                 api_key=api_key,
@@ -533,9 +556,10 @@ class RAG(Photon):
             raise RuntimeError("Backend must be LEPTON, BING, GOOGLE, SERPER or SEARCHAPI.")
         logger.info(f"Using Search API backend: {self.backend}")
         # self.llm_type = os.environ["LLM_TYPE"].upper()
-        self.llm_type = "openai"
+        self.llm_type = "openrouter"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = "gpt-3.5-turbo-16k"
+        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-70b-instruct"]
+        self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
         self.executor = concurrent.futures.ThreadPoolExecutor(
