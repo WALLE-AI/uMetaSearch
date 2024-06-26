@@ -172,6 +172,10 @@ MODEL_NAME_LIST = {
         "meta-llama/llama-3-8b-instruct:free":"meta-llama/llama-3-8b-instruct:free",
         "microsoft/phi-3-medium-128k-instruct:free":"microsoft/phi-3-medium-128k-instruct:free",
         "meta-llama/llama-3-70b-instruct":"meta-llama/llama-3-70b-instruct"
+    },
+    "siliconflow":{
+        "Qwen/Qwen2-7B-Instruct":"Qwen/Qwen2-7B-Instruct",
+        "Qwen/Qwen2-72B-Instruct":"Qwen/Qwen2-72B-Instruct"
     }
     
 }
@@ -496,6 +500,9 @@ class RAG(Photon):
             elif self.llm_type == "openrouter":
                 base_url = "https://openrouter.ai/api/v1"
                 api_key  = os.environ.get("OPENROUTER_API_KEY")
+            elif self.llm_type =='siliconflow':
+                base_url = "https://api.siliconflow.cn/v1"
+                api_key = os.environ.get("SILICONFLOW_API_KEY")
             else:
                 base_url = "https://api.openai.com/v1"
                 api_key  = os.environ.get("OPENAI_API_KEY")
@@ -559,9 +566,9 @@ class RAG(Photon):
             raise RuntimeError("Backend must be LEPTON, BING, GOOGLE, SERPER or SEARCHAPI.")
         logger.info(f"Using Search API backend: {self.backend}")
         # self.llm_type = os.environ["LLM_TYPE"].upper()
-        self.llm_type = "openai"
+        self.llm_type = "siliconflow"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = MODEL_NAME_LIST[self.llm_type]["gpt-3.5-turbo-16k"]
+        self.model = MODEL_NAME_LIST[self.llm_type]["Qwen/Qwen2-72B-Instruct"]
         # self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
@@ -742,9 +749,8 @@ class RAG(Photon):
         # Second, upload to KV. Note that if uploading to KV fails, we will silently
         # ignore it, because we don't want to affect the user experience.
         _ = self.executor.submit(self.kv.put, search_uuid, "".join(all_yielded_results))
-
-    @Photon.handler(method="POST", path="/query")
     @observe()
+    @Photon.handler(method="POST", path="/query")
     def query_function(
             self,
             query: str,
