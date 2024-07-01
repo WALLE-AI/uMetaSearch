@@ -566,9 +566,9 @@ class RAG(Photon):
             raise RuntimeError("Backend must be LEPTON, BING, GOOGLE, SERPER or SEARCHAPI.")
         logger.info(f"Using Search API backend: {self.backend}")
         # self.llm_type = os.environ["LLM_TYPE"].upper()
-        self.llm_type = "siliconflow"
+        self.llm_type = "openrouter"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = MODEL_NAME_LIST[self.llm_type]["Qwen/Qwen2-72B-Instruct"]
+        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-8b-instruct:free"]
         # self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
