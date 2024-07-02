@@ -9,8 +9,40 @@ import threading
 import traceback
 from typing import List, Generator, Optional
 from itertools import islice
+import asyncio
 
 
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+from ragas.metrics.critique import harmfulness
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
+ # metrics you chose
+metrics = [faithfulness, answer_relevancy, context_precision, harmfulness]   
+# wrappers
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.run_config import RunConfig
+from ragas.metrics.base import MetricWithLLM, MetricWithEmbeddings
+ 
+llm = ChatOpenAI()
+emb = OpenAIEmbeddings()
+# https://langfuse.com/guides/cookbook/evaluation_of_rag_with_ragas
+# util function to init Ragas Metrics
+def init_ragas_metrics(metrics, llm, embedding):
+    for metric in metrics:
+        if isinstance(metric, MetricWithLLM):
+            metric.llm = llm
+        if isinstance(metric, MetricWithEmbeddings):
+            metric.embeddings = embedding
+        run_config = RunConfig()
+        metric.init(run_config)
+ 
+init_ragas_metrics(
+    metrics,
+    llm=LangchainLLMWrapper(llm),
+    embedding=LangchainEmbeddingsWrapper(emb),
+)
+ 
 
 import httpx
 import leptonai
@@ -27,6 +59,7 @@ from loguru import logger
 
 from langfuse.decorators import observe
 from langfuse.openai import openai
+from langfuse import Langfuse
 
 
 import urllib3
@@ -179,6 +212,39 @@ MODEL_NAME_LIST = {
     }
     
 }
+
+
+'''
+新增ragas评估搜索上下文与搜索内容相关分数
+'''
+async def score_with_ragas(query, chunks, answer):
+
+    contexts_context = '/n'.join([text['snippet'] for text in chunks])
+    # pass it as span
+    trace = Langfuse().trace(name = "rag")
+ 
+    # retrieve the relevant chunks
+    # chunks = get_similar_chunks(question)
+    # pass it as span
+    trace.span(
+        name = "retrieval", input={'question': query}, output={'contexts': contexts_context}
+    )
+ 
+    # use llm to generate a answer with the chunks
+    # answer = get_response_from_llm(question, chunks)
+    trace.span(
+        name = "generation", input={'question': query, 'contexts': contexts_context}, output={'answer': answer}
+    )
+
+    logger.info(f"search context {contexts_context}")
+    scores = {}
+    for m in metrics:
+        print(f"calculating {m.name}")
+        scores[m.name] = await m.ascore(
+            row={"question": query, "contexts": [contexts_context], "answer": answer}
+        )
+    for m in metrics:
+        trace.score(name=m.name, value=scores[m.name])
 
 
 def is_chinese(uchar):
@@ -568,7 +634,7 @@ class RAG(Photon):
         # self.llm_type = os.environ["LLM_TYPE"].upper()
         self.llm_type = "openrouter"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-8b-instruct:free"]
+        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-70b-instruct"]
         # self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
@@ -734,7 +800,7 @@ class RAG(Photon):
             yield result
 
     def stream_and_upload_to_kv(
-            self, contexts, llm_response, related_questions_future, search_uuid
+            self, contexts, llm_response, related_questions_future, search_uuid,query
     ):
         """
         Streams the result and uploads to KV.
@@ -748,7 +814,11 @@ class RAG(Photon):
             yield result
         # Second, upload to KV. Note that if uploading to KV fails, we will silently
         # ignore it, because we don't want to affect the user experience.
-        _ = self.executor.submit(self.kv.put, search_uuid, "".join(all_yielded_results))
+        result_text = "".join(all_yielded_results)
+        _ = self.executor.submit(self.kv.put, search_uuid, result_text)
+        ##ragas评估
+        logger.info(f"llm response {self.history[-1]['content']}")
+        asyncio.run(score_with_ragas(query, contexts,self.history[-1]['content']))
     @observe()
     @Photon.handler(method="POST", path="/query")
     def query_function(
@@ -866,7 +936,6 @@ class RAG(Photon):
                 temperature=0.9,
             )
             self.history = self.reduce_tokens(self.history)
-
             # Append the user question to the history.
             self.history.append({"role": "user", "content": query})
             if self.should_do_related_questions and generate_related_questions:
@@ -885,7 +954,7 @@ class RAG(Photon):
 
         return StreamingResponse(
             self.stream_and_upload_to_kv(
-                contexts, llm_response, related_questions_future, search_uuid
+                contexts, llm_response, related_questions_future, search_uuid,query
             ),
             media_type="text/html",
         )
