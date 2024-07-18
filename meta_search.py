@@ -203,8 +203,9 @@ MODEL_NAME_LIST = {
     },
     "openrouter":{
         "meta-llama/llama-3-8b-instruct:free":"meta-llama/llama-3-8b-instruct:free",
-        "microsoft/phi-3-medium-128k-instruct:free":"microsoft/phi-3-medium-128k-instruct:free",
-        "meta-llama/llama-3-70b-instruct":"meta-llama/llama-3-70b-instruct"
+        "microsoft/phi-3-medium-4k-instruct":"microsoft/phi-3-medium-4k-instruct",
+        "meta-llama/llama-3-70b-instruct":"meta-llama/llama-3-70b-instruct",
+        "mistralai/mistral-7b-instruct":"mistralai/mistral-7b-instruct"
     },
     "siliconflow":{
         "Qwen/Qwen2-7B-Instruct":"Qwen/Qwen2-7B-Instruct",
