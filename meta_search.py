@@ -108,14 +108,14 @@ lepton_stop_words = [
 # to the model on how to generate the answer. Of course, different models may
 # behave differently, and we haven't tuned the prompt to make it optimal - this
 # is left to you, application creators, as an open problem.
-_rag_system_prompt = """You are a large language AI assistant. You are given a user question, and please write clean, concise and accurate answer to the question. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a number. Please use the context and cite the context at the end of each sentence if applicable.
+_rag_system_prompt = """You are a large language AI assistant. You are given a user question, and please write clean, concise and accurate answer to the question. If the user question has nothing to do with each context, please respond according to your own understanding. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a number. Please use the context and cite the context at the end of each sentence if applicable.
 
 Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please keep your answer within 1024 tokens. If the provided context does not offer enough information, please use your own knowledge to answer the user question.
 
 Please cite the contexts with the reference numbers, in the format [citation:x]. If a sentence comes from multiple contexts, please list all applicable citations, like [citation:3][citation:5]. Other than code and specific names and citations, your answer must be written in the same language as the question.
 """
 
-_rag_system_prompt_zh = """你是一个大型的语言AI助手。当用户提出问题时，请你写出清晰、简洁且准确的答案。我们会给你一组与问题相关的上下文，每个上下文都以类似[[citation:x]]这样的引用编号开始，其中x是一个数字。如果适用，请在每句话后面使用并引述该上下文。
+_rag_system_prompt_zh = """你是一个大型的语言AI助手。当用户提出问题时，请你写出清晰、简洁且准确的答案。如果用户问题与每个上下文之间毫无关系，请你根据自己理解答复。我们会给你一组与问题相关的上下文，每个上下文都以类似[[citation:x]]这样的引用编号开始，其中x是一个数字。如果适用，请在每句话后面使用并引述该上下文。
 
 你的答案必须正确、精确，并由专家以公正和专业的语气撰写。请将你的回答限制在1024个token内。如果所提供的上下文信息不足，可以使用自己知识来回答用户问题。
 
@@ -205,7 +205,10 @@ MODEL_NAME_LIST = {
         "meta-llama/llama-3-8b-instruct:free":"meta-llama/llama-3-8b-instruct:free",
         "microsoft/phi-3-medium-4k-instruct":"microsoft/phi-3-medium-4k-instruct",
         "meta-llama/llama-3-70b-instruct":"meta-llama/llama-3-70b-instruct",
-        "mistralai/mistral-7b-instruct":"mistralai/mistral-7b-instruct"
+        "mistralai/mistral-7b-instruct":"mistralai/mistral-7b-instruct",
+        "meta-llama/llama-3.1-405b-instruct":"meta-llama/llama-3.1-405b-instruct",
+        "meta-llama/llama-3.1-8b-instruct":"meta-llama/llama-3.1-8b-instruct",
+        "google/gemma-2-27b-it":"google/gemma-2-27b-it"
     },
     "siliconflow":{
         "Qwen/Qwen2-7B-Instruct":"Qwen/Qwen2-7B-Instruct",
@@ -635,7 +638,7 @@ class RAG(Photon):
         # self.llm_type = os.environ["LLM_TYPE"].upper()
         self.llm_type = "openrouter"
         logger.info(f"Using LLM type: {self.llm_type}")
-        self.model = MODEL_NAME_LIST[self.llm_type]["meta-llama/llama-3-70b-instruct"]
+        self.model = MODEL_NAME_LIST[self.llm_type]["google/gemma-2-27b-it"]
         # self.model = "meta-llama/llama-3-8b-instruct:free"
         logger.info(f"Using LLM model: {self.model}")
         # An executor to carry out async tasks, such as uploading to KV.
